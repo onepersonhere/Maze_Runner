@@ -475,6 +475,12 @@ files:
         }
     }
   learner_created: false
+- name: test_maze.txt
+  visible: true
+  learner_created: true
 feedback_link: https://hyperskill.org/projects/47/stages/253/implement#comment
-status: Unchecked
-record: -1
+status: Solved
+feedback:
+  message: Congratulations!
+  time: Mon, 21 Jun 2021 06:30:00 UTC
+record: 3
