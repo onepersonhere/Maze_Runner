@@ -163,6 +163,16 @@ public class Main {
         //adds avaliable coord to Passage
         Passage = new LinkedList<>();
         int passageways = 0;
+        //right
+        if(coord[1] + 1 < mazeColumn_Size && maze[coord[0]][coord[1] + 1] == 0){
+            Passage.add(new int[]{coord[0], coord[1] + 1});
+            passageways++;
+        }
+        //left
+        if(coord[1] - 1 > 0 && maze[coord[0]][coord[1] - 1] == 0){
+            Passage.add(new int[]{coord[0], coord[1] - 1});
+            passageways++;
+        }
         //up
         if(coord[0] + 1 < mazeRow_Size && maze[coord[0] + 1][coord[1]] == 0){
             Passage.add(new int[]{coord[0] + 1, coord[1]});
@@ -173,47 +183,46 @@ public class Main {
             Passage.add(new int[]{coord[0] - 1, coord[1]});
             passageways++;
         }
-        //left
-        if(coord[1] - 1 > 0 && maze[coord[0]][coord[1] - 1] == 0){
-            Passage.add(new int[]{coord[0], coord[1] - 1});
-            passageways++;
-        }
-        //right
-        if(coord[1] + 1 < mazeColumn_Size && maze[coord[0]][coord[1] + 1] == 0){
-            Passage.add(new int[]{coord[0], coord[1] + 1});
-            passageways++;
-        }
+
+
+        System.out.println("Passage: " + Arrays.deepToString(Passage.toArray()));
         return passageways;
     }
     static boolean searchAlgo(int[] coord, int[] exit, int passageways, Deque<int[]> stack){
 
         while(coord != exit) {
             //if only 1 passage, go to that passage.
-            System.out.println(Arrays.deepToString(stack.toArray()));
+            System.out.println("Stack: " + Arrays.deepToString(stack.toArray()));
             arrToMaze(true);
             if (passageways == 1) {
                 coord = Passage.getLast();//err
+                System.out.println("Chosen Coord: " + Arrays.toString(coord));
+
                 mark(coord);
                 Visited.add(coord);
                 passageways = search(coord);
+
                 if(searchAlgo(coord,exit,passageways,stack)){
                     int i = Visited.indexOf(stack.getLast());
                     for(int n = Visited.size() - 1; n >= i; n--){
                         int[] arr = Visited.get(n);
                         unMark(arr);
                     }
-                    stack.pop();
-                    coord = stack.getLast();
+                    System.out.println("Coord removed from stack: " + stack.getLast());
+                    stack.remove();
+                    //coord = stack.getLast();
                     //searchAlgo(coord,exit,passageways,stack);
                 }
             }
             //if 2 or more passage, choose random. store that coord in the stack
             if (passageways >= 2) { //split!!!
-                while(Passage.size() != 0){
+                while(Passage.size() != 0){//doesn't work, was keep adding the last
                     stack.add(Passage.getLast());
-                    Passage.pop();
+                    Passage.removeLast();
                 }
                 coord = stack.getLast();
+                System.out.println("Chosen Coord: " + Arrays.toString(coord));
+
                 mark(coord);
                 Visited.add(coord);
                 passageways = search(coord);
@@ -224,8 +233,9 @@ public class Main {
                         int[] arr = Visited.get(n);
                         unMark(arr);
                     }
-                    stack.pop();
-                    coord = stack.getLast();
+                    System.out.println("Coord removed from stack: " + Arrays.toString(stack.getLast()));
+                    stack.remove();
+                    //coord = stack.getLast();
                     //searchAlgo(coord,exit,passageways,stack);
                 }
 
@@ -252,6 +262,7 @@ public class Main {
         //mark the coords of the lines between the coords with 3;
         arrToMaze(true);
     }
+
     static void mazeMenu(){
         Scanner scanner = new Scanner(System.in);
         System.out.println("=== Menu ===\n" +
