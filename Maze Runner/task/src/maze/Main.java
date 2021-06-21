@@ -55,7 +55,7 @@ public class Main {
             while (myReader.hasNextLine()) {
                 String data = myReader.nextLine();
                 //reads line by line -> convert to 1s and 0s and store in maze
-                List<Integer> line = new ArrayList<Integer>();
+                List<Integer> line = new ArrayList<>();
                 for(int i = 0; i < data.length(); i+=2){
                     if(data.charAt(i) == '\u2588'){
                         line.add(1);
@@ -153,10 +153,14 @@ public class Main {
         maze[coord[0]][coord[1]] = 3;
     }
     static void unMark(int[] coord){
-        maze[coord[0]][coord[1]] = 0;
+        maze[coord[0]][coord[1]] = 4;
     }
-    private static LinkedList<int[]> Passage = new LinkedList<>();;
+    private static LinkedList<int[]> Passage = new LinkedList<>();
+    private static List<int[]> Visited = new ArrayList<>();
+    //all visited coord
+    //if visited, mark with 4
     static int search(int[] coord){
+        //adds avaliable coord to Passage
         Passage = new LinkedList<>();
         int passageways = 0;
         //up
@@ -185,33 +189,49 @@ public class Main {
 
         while(coord != exit) {
             //if only 1 passage, go to that passage.
-            System.out.println(Arrays.deepToString(Passage.toArray()));
+            System.out.println(Arrays.deepToString(stack.toArray()));
+            arrToMaze(true);
             if (passageways == 1) {
-                coord = Passage.getFirst();//err
+                coord = Passage.getLast();//err
                 mark(coord);
+                Visited.add(coord);
                 passageways = search(coord);
                 if(searchAlgo(coord,exit,passageways,stack)){
-                    unMark(coord);
+                    int i = Visited.indexOf(stack.getLast());
+                    for(int n = Visited.size() - 1; n >= i; n--){
+                        int[] arr = Visited.get(n);
+                        unMark(arr);
+                    }
+                    stack.pop();
+                    coord = stack.getLast();
+                    //searchAlgo(coord,exit,passageways,stack);
                 }
             }
             //if 2 or more passage, choose random. store that coord in the stack
-            if (passageways >= 2) {
+            if (passageways >= 2) { //split!!!
                 while(Passage.size() != 0){
                     stack.add(Passage.getLast());
                     Passage.pop();
                 }
                 coord = stack.getLast();
                 mark(coord);
+                Visited.add(coord);
                 passageways = search(coord);
                 //if ever reach dead end, break out of recursion and choose the other one
                 if(searchAlgo(coord,exit,passageways,stack)){
-                    unMark(coord);
+                    int i = Visited.indexOf(stack.getLast());
+                    for(int n = Visited.size() - 1; n >= i; n--){
+                        int[] arr = Visited.get(n);
+                        unMark(arr);
+                    }
+                    stack.pop();
+                    coord = stack.getLast();
+                    //searchAlgo(coord,exit,passageways,stack);
                 }
 
             }
             //if no passage, return back to last coord, choose another (implement bool)
             if (passageways == 0) {
-                stack.pop();
                 return true;
             }
         }
