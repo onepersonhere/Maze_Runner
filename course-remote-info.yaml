@@ -3,7 +3,7 @@ hyperskill_project:
   ide_files: https://stepik.org/media/attachments/lesson/209893/additional_files.json
   is_template_based: false
   use_ide: true
-update_date: Mon, 21 Jun 2021 11:59:31 UTC
+update_date: Mon, 21 Jun 2021 23:26:13 UTC
 stages:
 - id: 251
   step: 5393
@@ -16,7 +16,7 @@ stages:
   is_completed: true
 - id: 254
   step: 5396
-  is_completed: false
+  is_completed: true
 topics:
   0:
   - title: JVM, JRE, and JDK

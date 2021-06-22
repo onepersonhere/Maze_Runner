@@ -120,8 +120,9 @@ public class Main {
             e.printStackTrace();
         }
     }
+    private static int[] opening = new int[2];
+    private static int[] exit = new int[2];
     static int[] findOpening(){
-        int[] opening = new int[2];
         for(int i = 0; i < mazeRow_Size; i++){
             if(maze[i][0] == 0){
                 opening = new int[]{i, 0};
@@ -131,18 +132,32 @@ public class Main {
                 opening = new int[]{i, mazeColumn_Size-1};
                 break;
             }
+            if(maze[0][i] == 0){
+                opening = new int[]{0,i};
+                break;
+            }
+            if(maze[mazeRow_Size-1][i] == 0){
+                opening = new int[]{mazeRow_Size-1,i};
+                break;
+            }
         }
         return opening;
     }
     static int[] findExit(){
-        int[] exit = new int[2];
-
-        for(int i = 0; i < mazeColumn_Size; i++){
-            if(maze[0][i] == 0){
+        for(int i = 0; i < mazeRow_Size; i++){
+            if(maze[i][0] == 0 && !Arrays.equals(new int[]{i, 0}, opening)){
+                exit = new int[]{i, 0};
+                break;
+            }
+            if(maze[i][mazeColumn_Size-1] == 0 && !Arrays.equals(new int[]{i, mazeColumn_Size-1}, opening)){
+                exit = new int[]{i, mazeColumn_Size-1};
+                break;
+            }
+            if(maze[0][i] == 0 && !Arrays.equals(new int[]{0, i}, opening)){
                 exit = new int[]{0,i};
                 break;
             }
-            if(maze[mazeRow_Size-1][i] == 0){
+            if(maze[mazeRow_Size-1][i] == 0 && !Arrays.equals(new int[]{mazeRow_Size-1,i}, opening)){
                 exit = new int[]{mazeRow_Size-1,i};
                 break;
             }
@@ -155,8 +170,15 @@ public class Main {
     static void unMark(int[] coord){
         maze[coord[0]][coord[1]] = 4;
     }
+
     private static LinkedList<int[]> Passage = new LinkedList<>();
     private static List<int[]> Visited = new ArrayList<>();
+    static boolean checkExit(int[] coord){
+        if(Arrays.equals(coord, exit)){
+            return true;
+        }
+        return false;
+    }
     //all visited coord
     //if visited, mark with 4
     static int search(int[] coord){
@@ -168,80 +190,111 @@ public class Main {
             Passage.add(new int[]{coord[0], coord[1] + 1});
             passageways++;
         }
-        //left
-        if(coord[1] - 1 > 0 && maze[coord[0]][coord[1] - 1] == 0){
-            Passage.add(new int[]{coord[0], coord[1] - 1});
-            passageways++;
-        }
+
         //up
         if(coord[0] + 1 < mazeRow_Size && maze[coord[0] + 1][coord[1]] == 0){
             Passage.add(new int[]{coord[0] + 1, coord[1]});
             passageways++;
         }
         //down
-        if(coord[0] - 1 > 0 && maze[coord[0] - 1][coord[1]] == 0){
+        if(coord[0] - 1 >= 0 && maze[coord[0] - 1][coord[1]] == 0){
             Passage.add(new int[]{coord[0] - 1, coord[1]});
             passageways++;
         }
+        //left
+        if(coord[1] - 1 >= 0 && maze[coord[0]][coord[1] - 1] == 0){
+            Passage.add(new int[]{coord[0], coord[1] - 1});
+            passageways++;
+        }
 
-
-        System.out.println("Passage: " + Arrays.deepToString(Passage.toArray()));
+        //System.out.println("Passage: " + Arrays.deepToString(Passage.toArray()));
         return passageways;
     }
-    static boolean searchAlgo(int[] coord, int[] exit, int passageways, Deque<int[]> stack){
+    static boolean searchAlgo(int[] coord, int passageways, Deque<int[]> stack){
 
         while(coord != exit) {
+            //from previous coord
             //if only 1 passage, go to that passage.
-            System.out.println("Stack: " + Arrays.deepToString(stack.toArray()));
-            arrToMaze(true);
-            if (passageways == 1) {
-                coord = Passage.getLast();//err
-                System.out.println("Chosen Coord: " + Arrays.toString(coord));
 
+            //System.out.println("Stack: " + Arrays.deepToString(stack.toArray()));
+            //System.out.println("Visited: " + Arrays.deepToString(Visited.toArray()));
+            //System.out.println("passageways: "+passageways);
+            //arrToMaze(true);
+
+            if (passageways == 1) {
+                if(!Passage.isEmpty()) {
+                    coord = Passage.getLast();//returns next coord -> current
+                    //System.out.println("Chosen Coord: " + Arrays.toString(coord));
+                    //System.out.println("Exit: " + Arrays.toString(exit));
+                }else{
+                    return true;
+                }
                 mark(coord);
                 Visited.add(coord);
                 passageways = search(coord);
 
-                if(searchAlgo(coord,exit,passageways,stack)){
+                if(searchAlgo(coord,passageways,stack)){
                     int i = Visited.indexOf(stack.getLast());
                     for(int n = Visited.size() - 1; n >= i; n--){
                         int[] arr = Visited.get(n);
                         unMark(arr);
+                        //System.out.println("Visited unmarked: " + Arrays.toString(arr));
+                        //System.out.println("Visited: " + Arrays.deepToString(Visited.toArray()));
+                        //arrToMaze(true);
                     }
-                    System.out.println("Coord removed from stack: " + stack.getLast());
-                    stack.remove();
-                    //coord = stack.getLast();
-                    //searchAlgo(coord,exit,passageways,stack);
+                    //System.out.println("Coord removed from stack: " + Arrays.toString(stack.getLast()));
+                    stack.remove(stack.getLast());
+                    //System.out.println("Stack: " + Arrays.deepToString(stack.toArray()));
+
+                    passageways = 2;//return the other direction
+
+                }else{
+                    return false;
                 }
             }
             //if 2 or more passage, choose random. store that coord in the stack
             if (passageways >= 2) { //split!!!
-                while(Passage.size() != 0){//doesn't work, was keep adding the last
-                    stack.add(Passage.getLast());
-                    Passage.removeLast();
+                while(true){
+                    if(!Passage.isEmpty()) {
+                        stack.add(Passage.getLast());
+                        Passage.removeLast();
+                    }
+                    if(Passage.isEmpty()){
+                        break;
+                    }
                 }
                 coord = stack.getLast();
-                System.out.println("Chosen Coord: " + Arrays.toString(coord));
-
+                //System.out.println("Chosen Coord: " + Arrays.toString(coord));
+                //System.out.println("Exit: " + Arrays.toString(exit));
                 mark(coord);
                 Visited.add(coord);
                 passageways = search(coord);
                 //if ever reach dead end, break out of recursion and choose the other one
-                if(searchAlgo(coord,exit,passageways,stack)){
+                if(searchAlgo(coord,passageways,stack)){
                     int i = Visited.indexOf(stack.getLast());
                     for(int n = Visited.size() - 1; n >= i; n--){
                         int[] arr = Visited.get(n);
                         unMark(arr);
+                        //System.out.println("Visited unmarked: " + arr);
+                        //System.out.println("Visited: " + Arrays.deepToString(Visited.toArray()));
+                        //arrToMaze(true);
                     }
-                    System.out.println("Coord removed from stack: " + Arrays.toString(stack.getLast()));
-                    stack.remove();
-                    //coord = stack.getLast();
-                    //searchAlgo(coord,exit,passageways,stack);
+                    //System.out.println("Coord removed from stack: " + Arrays.toString(stack.getLast()));
+                    stack.remove(stack.getLast());
+                    //System.out.println("Stack: " + Arrays.deepToString(stack.toArray()));
+
+                    passageways = 2;
+
+                }else{
+                    return false;
                 }
 
             }
             //if no passage, return back to last coord, choose another (implement bool)
             if (passageways == 0) {
+                if(checkExit(coord)){
+                    return false;
+                }
                 return true;
             }
         }
@@ -249,16 +302,17 @@ public class Main {
     }
     static void autoSolver(){
         //find openings at perimeter
-        int[] opening = findOpening();
+        findOpening();
         mark(opening);
-        int[] exit = findExit();
+        //System.out.println("Opening Coord: " + Arrays.toString(opening));
+        findExit();
         int[] coord = new int[2];
         //use a Deque
         Deque<int[]> stack = new ArrayDeque<>();
         //search up, down, left right
         int passageways = search(opening);
 
-        searchAlgo(coord, exit, passageways, stack);
+        searchAlgo(coord, passageways, stack);
         //mark the coords of the lines between the coords with 3;
         arrToMaze(true);
     }
@@ -340,6 +394,7 @@ public class Main {
         return false;
     }
     static int RNG(){
+
         int i = (int)(Math.random() * (mazeRow_Size - 2) + 1); //1-8 random
         int j = (int)(Math.random() * (mazeColumn_Size - 2) + 1); //1-8
 
